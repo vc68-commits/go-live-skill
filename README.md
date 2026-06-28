@@ -18,3 +18,5 @@ G	Performance	Bundle size, immagini ottimizzate	Lighthouse, CWV
 H	Content & UX	404, OG tags, favicon, error pages	Landing KW, competitor gap
 I	Monitoring	Sentry/error, uptime config	Alert, log review
 Output: priorità P0 (blocca lancio) → P1 → P2 → P3
+
+usalo in qualsiasi progetto con /go-live o /go-live https://esempio.com

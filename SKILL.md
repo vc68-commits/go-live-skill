@@ -101,6 +101,22 @@ find . -name "error.tsx" -o -name "500.tsx" -o -name "500.html" | grep -v node_m
 find ./public -name "favicon*" -o -name "icon*" 2>/dev/null | head -10
 ```
 
+**Accessibilità**:
+```bash
+# Skip link
+grep -r "skip-link\|skip-to-content\|skipLink\|skip-main" . --include="*.html" --include="*.tsx" --include="*.ts" -l
+# ARIA labels
+grep -r "aria-label\|aria-labelledby" . --include="*.html" --include="*.tsx" -l
+# Immagini senza alt (segnala quelle sospette)
+grep -rn "<img " . --include="*.html" --include="*.tsx" | grep -v 'alt=' | head -5
+# HTML senza lang attribute
+grep -rn "<html " . --include="*.html" | grep -v 'lang=' | head -5
+# Dichiarazione accessibilità
+find . \( -name "accessibility*" -o -name "accessibilita*" \) -not -path "*/node_modules/*"
+# Focus visible in CSS
+grep -r ":focus\|:focus-visible" . --include="*.css" -l
+```
+
 **Monitoring**:
 ```bash
 grep -r "sentry\|@sentry\|Sentry" . --include="*.ts" --include="*.tsx" --include="*.json" -l
@@ -231,7 +247,21 @@ Produce il seguente formato (adatta i valori trovati):
 [🔲] Competition analysis svolta
 [🔲] Long-tail content strategy definita
 
-### I. MONITORING
+### I. ACCESSIBILITÀ
+[✅/❌] Attributo lang sull'elemento <html>
+[✅/❌] Skip link ("Salta al contenuto") presente
+[✅/❌] Tutti i tag <img> hanno attributo alt
+[✅/❌] ARIA landmarks (nav, main, footer) etichettati
+[✅/❌] Dichiarazione di accessibilità presente (/accessibility)
+[✅/❌] :focus / :focus-visible definiti nel CSS
+[🔲] Navigazione da tastiera verificata (Tab, Enter, Esc)
+[🔲] Contrasto colori ≥ 4.5:1 (WCAG 2.1 AA)
+[🔲] Heading hierarchy corretta (h1 → h2 → h3, no salti)
+[🔲] Form con label associati correttamente
+[🔲] Test con screen reader (NVDA / VoiceOver)
+[🔲] Lighthouse Accessibility ≥ 90
+
+### J. MONITORING
 [✅/❌] Error monitoring (Sentry o equivalente)
 [🔲] Uptime monitoring configurato (UptimeRobot, BetterStack, ecc.)
 [🔲] Alert su downtime (email/Slack)
@@ -245,13 +275,13 @@ SCORE: [N✅ done] / [N totale] | [N❌ missing] | [N🔲 manual]
 Elenca qui i ❌ in categorie A, B, E con impatto legale o di sicurezza
 
 ### 🟡 P1 — ALTA PRIORITÀ (rischio lancio)
-Elenca qui i ❌ in categoria C (GSC, GA4) e I (monitoring)
+Elenca qui i ❌ in categoria C (GSC, GA4), I (accessibilità base) e J (monitoring)
 
 ### 🟢 P2 — OTTIMIZZAZIONE (post-lancio ok)
 Elenca qui i 🔲 e ⚠️ non bloccanti
 
 ### ⚪ P3 — BACKLOG (nice-to-have)
-Elenca qui i 🔲 di content strategy, long-tail, competition
+Elenca qui i 🔲 di content strategy, long-tail, competition, test accessibilità avanzati
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -282,6 +312,9 @@ Se sì, salva nella root del progetto con:
 - ❌ 404 page mancante
 - ❌ Uptime monitoring non configurato
 - ❌ Footer senza P.IVA / dati legali
+- ❌ Attributo lang assente su <html> (rompe screen reader)
+- ❌ Immagini senza alt (barriera per non vedenti)
+- ❌ Dichiarazione di accessibilità assente
 
 ### P2 — Ottimizzazione (entro 2 settimane dal lancio)
 - 🔲 Lighthouse < 90
@@ -295,6 +328,9 @@ Se sì, salva nella root del progetto con:
 - 🔲 Long-tail content strategy
 - 🔲 OG image personalizzate per pagina
 - 🔲 Hreflang (se multilingua)
+- 🔲 Test accessibilità avanzato con screen reader (NVDA/VoiceOver)
+- 🔲 Audit contrasto colori con strumento dedicato
+- 🔲 Certificazione WCAG 2.1 AA (se PA o servizio pubblico)
 
 ---
 

@@ -1,12 +1,12 @@
 ---
 name: go-live
-description: "Go-live readiness agent for web apps and sites. Audits all launch-critical activities across 9 categories: infrastructure/DNS, security headers, SEO/GEO foundation, legal/GDPR, company info, performance, content/UX, monitoring. Produces a prioritized checklist with ✅/⚠️/❌/🔲 status. Run at any time to track launch readiness and identify blockers. Invoke when user says: go-live, go live, checklist lancio, pronto per produzione, launch checklist, or similar."
+description: "Go-live readiness agent for web apps and sites. Audits all launch-critical activities across 15 categories: infrastructure/DNS, security, SEO, GEO/AI, legal/GDPR, company info, performance, content/UX, accessibility, monitoring, email, forms/anti-spam, link checker, hreflang, backup. Produces a prioritized checklist with ✅/⚠️/❌/🔲 status. Run at any time to track launch readiness and identify blockers. Invoke when user says: go-live, go live, checklist lancio, pronto per produzione, launch checklist, or similar."
 user-invokable: true
 argument-hint: "[url]"
 license: MIT
 metadata:
   author: bollette.it
-  version: "1.0.0"
+  version: "1.2.0"
   category: launch
 ---
 
@@ -69,6 +69,10 @@ grep -r "canonical" . --include="*.tsx" --include="*.ts" -l
 grep -r "application/ld+json" . --include="*.tsx" --include="*.ts" -l
 # OG tags
 grep -r "openGraph\|og:image\|og:title" . --include="*.tsx" --include="*.ts" -l
+# Twitter/X card
+grep -r "twitter:card\|twitter:title\|twitter:image" . --include="*.tsx" --include="*.ts" --include="*.html" -l
+# Hreflang
+grep -r "hreflang" . --include="*.tsx" --include="*.ts" --include="*.html" -l
 ```
 
 **Legal & GDPR**:
@@ -89,6 +93,8 @@ grep -r "privacy@" . --include="*.tsx" --include="*.ts" --include="*.html" -l
 ```bash
 grep -r "P\.IVA\|VAT\|partita iva\|società\|Srl\|SpA\|Ltd\|GmbH" . --include="*.tsx" --include="*.ts" --include="*.html" -l
 grep -r "Via \|Piazza \|Viale \|Street \|Address" . --include="*.tsx" --include="*.ts" -l
+# Telefono
+grep -r "tel:\|telefon\|phone\|+39" . --include="*.tsx" --include="*.ts" --include="*.html" -l
 ```
 
 **Content & UX**:
@@ -99,6 +105,8 @@ find . -name "not-found.tsx" -o -name "404.tsx" -o -name "404.html" | grep -v no
 find . -name "error.tsx" -o -name "500.tsx" -o -name "500.html" | grep -v node_modules
 # Favicon
 find ./public -name "favicon*" -o -name "icon*" 2>/dev/null | head -10
+# Copyright year aggiornato
+grep -rn "©\|&copy;\|copyright" . --include="*.html" --include="*.tsx" | grep -E "202[0-3]" | head -5
 ```
 
 **Accessibilità**:
@@ -115,6 +123,25 @@ grep -rn "<html " . --include="*.html" | grep -v 'lang=' | head -5
 find . \( -name "accessibility*" -o -name "accessibilita*" \) -not -path "*/node_modules/*"
 # Focus visible in CSS
 grep -r ":focus\|:focus-visible" . --include="*.css" -l
+```
+
+**Email transazionale**:
+```bash
+grep -r "smtp\|nodemailer\|PHPMailer\|sendmail\|mail(" . --include="*.php" --include="*.ts" --include="*.js" -l
+grep -r "send_mail\|sendMail\|send-mail" . --include="*.php" --include="*.ts" --include="*.html" -l
+```
+
+**Form & Anti-spam**:
+```bash
+grep -r "honeypot\|recaptcha\|hcaptcha\|turnstile" . --include="*.php" --include="*.ts" --include="*.html" --include="*.tsx" -l
+grep -r "rate.limit\|rateLimit\|throttle" . --include="*.php" --include="*.ts" -l
+```
+
+**Hreflang**:
+```bash
+grep -r "hreflang" . --include="*.html" --include="*.tsx" --include="*.ts" -l
+# Verifica coppie (ogni pagina deve dichiarare tutte le lingue)
+grep -rn 'hreflang=' . --include="*.html" | head -10
 ```
 
 **Monitoring**:
@@ -148,6 +175,9 @@ curl -sL "https://$URL" | grep -i "google-site-verification"
 
 # SSL info
 curl -sI "https://$URL" --max-time 5 | head -3
+
+# Link checker base (solo link interni)
+wget --spider -r --no-parent -q "https://$URL" 2>&1 | grep "404\|broken" | head -10
 ```
 
 ### Step 4 — Analisi dei risultati e report
@@ -194,6 +224,8 @@ Produce il seguente formato (adatta i valori trovati):
 [✅/❌] Canonical URL su pagine chiave
 [✅/❌] Meta title e description (globali)
 [✅/❌] OG tags (og:title, og:description, og:image)
+[✅/❌] Twitter/X card tags (twitter:card, twitter:title, twitter:image)
+[✅/❌] Hreflang (se sito multilingua — IT/EN, x-default)
 [✅/❌] Schema.org: Organization/WebSite su homepage
 [✅/❌] Schema.org: page-specific (Article, HowTo, FAQ, ecc.)
 [✅/❌] GA4 configurato ([measurement ID])
@@ -226,6 +258,7 @@ Produce il seguente formato (adatta i valori trovati):
 [✅/❌] Footer: P.IVA / VAT number
 [✅/❌] Footer: indirizzo sede
 [✅/❌] Footer: email di contatto
+[✅/❌] Footer: numero di telefono (se rilevante per il business)
 [✅/❌] Footer: link legal (Privacy, Termini, Cookie)
 
 ### G. PERFORMANCE
@@ -242,6 +275,7 @@ Produce il seguente formato (adatta i valori trovati):
 [✅/❌] Error page personalizzata (500)
 [✅/❌] Favicon e app icons
 [✅/❌] OG image per social sharing
+[✅/❌] Copyright year nel footer aggiornato
 [🔲] Homepage ottimizzata per keyword primaria
 [🔲] Landing pages principali completate
 [🔲] Competition analysis svolta
@@ -268,6 +302,42 @@ Produce il seguente formato (adatta i valori trovati):
 [🔲] Log di produzione accessibili
 [🔲] Dashboard KPI / analytics review schedulata
 
+### K. EMAIL TRANSAZIONALE
+[✅/❌] SMTP configurato (credenziali in .env, non hardcoded)
+[✅/❌] Form contatti: invio email funzionante (test manuale)
+[✅/❌] SPF/DKIM per dominio mittente (non solo MX)
+[🔲] Email non finisce in spam (test con mail-tester.com)
+[🔲] From: address reale e monitorato (non noreply generico)
+[🔲] Reply-To configurato correttamente
+[🔲] Test ricezione su Gmail, Outlook, Apple Mail
+
+### L. FORM & ANTI-SPAM
+[✅/❌] Validazione server-side su tutti i form
+[✅/❌] Honeypot field o captcha presente
+[✅/❌] Rate limiting sull'endpoint form
+[✅/❌] Nessun campo nascosto che espone info server
+[🔲] Test invio con dati malformati (SQL injection, XSS)
+[🔲] Test invio multiplo rapido (rate limit verificato)
+
+### M. LINK CHECKER
+[✅/❌] Nessun link interno 404 nelle pagine principali
+[✅/❌] Nessun link esterno rotto nelle pagine principali
+[🔲] Verifica link nelle pagine secondarie (privacy, termini, ecc.)
+[🔲] Anchor link (#id) funzionanti
+
+### N. HREFLANG (solo siti multilingua)
+[✅/❌] Tag hreflang su tutte le pagine
+[✅/❌] Ogni pagina IT linka la corrispondente EN (e viceversa)
+[✅/❌] x-default definito su tutte le pagine
+[✅/❌] URL assoluti negli href hreflang (non relativi)
+[🔲] Verifica con GSC o hreflang validator online
+
+### O. BACKUP & RECOVERY
+[🔲] Backup automatici configurati (file + database se presente)
+[🔲] Frequenza backup adeguata (daily per siti attivi)
+[🔲] Procedura di rollback documentata e testata
+[🔲] Backup conservati off-site (non solo sul server)
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SCORE: [N✅ done] / [N totale] | [N❌ missing] | [N🔲 manual]
 
@@ -275,13 +345,13 @@ SCORE: [N✅ done] / [N totale] | [N❌ missing] | [N🔲 manual]
 Elenca qui i ❌ in categorie A, B, E con impatto legale o di sicurezza
 
 ### 🟡 P1 — ALTA PRIORITÀ (rischio lancio)
-Elenca qui i ❌ in categoria C (GSC, GA4), I (accessibilità base) e J (monitoring)
+Elenca qui i ❌ in categorie C (GSC, GA4), I (accessibilità base), J (monitoring), K (email), M (link interni rotti)
 
 ### 🟢 P2 — OTTIMIZZAZIONE (post-lancio ok)
-Elenca qui i 🔲 e ⚠️ non bloccanti
+Elenca qui i ❌/⚠️ in categorie L (anti-spam), N (hreflang), H (copyright), C (Twitter card) e i 🔲 non bloccanti
 
 ### ⚪ P3 — BACKLOG (nice-to-have)
-Elenca qui i 🔲 di content strategy, long-tail, competition, test accessibilità avanzati
+Elenca qui i 🔲 di content strategy, long-tail, competition, test screen reader, backup off-site, mail-tester
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -315,6 +385,8 @@ Se sì, salva nella root del progetto con:
 - ❌ Attributo lang assente su <html> (rompe screen reader)
 - ❌ Immagini senza alt (barriera per non vedenti)
 - ❌ Dichiarazione di accessibilità assente
+- ❌ Email transazionale non funzionante (form contatti silenzioso)
+- ❌ Link interni 404 nelle pagine principali
 
 ### P2 — Ottimizzazione (entro 2 settimane dal lancio)
 - 🔲 Lighthouse < 90
@@ -322,15 +394,21 @@ Se sì, salva nella root del progetto con:
 - ❌ llms.txt assente
 - ❌ Schema.org mancante su pagine chiave
 - 🔲 HSTS preload non submittato
+- ❌ Anti-spam assente su form contatti
+- ❌ Hreflang mancante (siti multilingua)
+- ❌ Twitter/X card tags assenti
+- ❌ Copyright year non aggiornato nel footer
 
 ### P3 — Backlog
 - 🔲 Competition analysis
 - 🔲 Long-tail content strategy
 - 🔲 OG image personalizzate per pagina
-- 🔲 Hreflang (se multilingua)
 - 🔲 Test accessibilità avanzato con screen reader (NVDA/VoiceOver)
 - 🔲 Audit contrasto colori con strumento dedicato
 - 🔲 Certificazione WCAG 2.1 AA (se PA o servizio pubblico)
+- 🔲 Test email su Gmail, Outlook, Apple Mail (mail-tester.com)
+- 🔲 Backup off-site configurato
+- 🔲 Test link nelle pagine secondarie (privacy, accessibility, ecc.)
 
 ---
 

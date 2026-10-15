@@ -1,0 +1,75 @@
+# Configurazione go-live v2 — copia questo file accanto al progetto come go-live.toml e compilalo.
+# Tutto è opzionale tranne domain/url. Più la configurazione è precisa, più i controlli sono affidabili.
+
+name = "nome del sito"            # nome mostrato nel report
+domain = "esempio.it"             # dominio nudo (senza https:// e senza www)
+url = "https://esempio.it"        # URL canonico di produzione
+language = "it"
+multilingual = false              # true => controlla hreflang
+
+[crawl]                           # richieste CORTESI: sola lettura, ritardo fra richieste
+delay_s = 1.0                     # secondi tra richieste allo stesso sito
+max_pages = 30                    # pagine campione (home + legali + una per sezione della sitemap)
+max_link_checks = 60              # link interni controllati
+max_external_checks = 15          # link esterni controllati
+sample_paths = []                 # pagine da includere sempre, es. ["/offerte", "/faq"]
+
+[email]
+sends_email = true                # il dominio invia email?
+auth_via_email = false            # true se il login è via magic link/OTP: SPF/DKIM diventano P0
+# provider usati per inviare/ricevere dal dominio. Valori noti:
+# resend, amazonses, qboxmail, google, microsoft, sendgrid, mailgun, postmark, brevo, mailchimp
+providers = []
+dkim_selectors = []               # selettori DKIM noti (dalla console del provider), es. ["resend", "s1"]
+
+[legal]
+# Fornitori che DEVONO comparire nella privacy anche se non rilevabili dall'esterno
+# (hosting, database, servizi AI, ecc.): es. ["Hetzner", "Supabase", "OpenAI"]
+expected_subprocessors = []
+vat = ""                          # P.IVA attesa (11 cifre); vuota = solo coerenza fra le pagine
+# percorsi alternativi se diversi dai default:
+# privacy_paths = ["/privacy"]
+# terms_paths = ["/termini"]
+# cookie_paths = ["/cookie"]
+# accessibility_paths = ["/accessibilita"]
+# about_paths = ["/chi-siamo"]
+
+# pagine che DEVONO essere noindex (non verranno segnalate)
+# noindex_ok = ["/admin", "/app", "/auth"]
+
+[browser]                         # modulo browser (Chromium + axe-core + Lighthouse); si attiva anche con --browser
+enabled = false
+pages = 5                         # pagine su cui girano axe, errori in console, tastiera
+mobile = true
+lighthouse = true
+
+[notify]                          # opzionale: avvisi con --notify (Telegram); il token sta in telegram_env, MAI in questo file
+mode = "changes"                  # "changes" = solo peggioramenti/certificato in scadenza; "always" = sempre
+telegram_env = "~/.config/go-live/telegram.env"
+cert_days_warn = 30
+
+[agent]                           # prontezza per gli agenti AI (categoria D: D05-D12)
+# markdown: non impostato = automatico (D05/D06/D07/D11 valgono solo se la home serve text/markdown);
+# true = il sito dichiara di supportare Accept: text/markdown (l'assenza è un fallimento); false = non applicabile.
+# markdown = true
+# contact_paths = ["/contact"]    # percorsi alternativi per la pagina contatti
+# trust_min_chars = 500           # contenuto minimo di about/contact/privacy
+# Passo OPZIONALE "Is Agentic" (Vercel su motore Ora, https://is-agentic.com): legge in SOLA LETTURA l'ultimo report pubblico
+# (score, tier Essential/Recommended/Bonus, problemi). NON avvia scansioni: per aggiornare il report usare la pagina web.
+# Esclude i controlli non applicabili, quindi è adatto ai siti di contenuti. ATTENZIONE: invia il dominio a is-agentic.com.
+# Si attiva anche da riga di comando con --isagentic.
+# isagentic = false
+# isagentic_min_score = 90        # sotto soglia → ⚠️; omesso/None = solo informativo
+# isagentic_max_age_h = 24        # oltre questa età il report è segnalato come possibilmente obsoleto
+
+# Passo OPZIONALE "ax" (Ora): scansione di prontezza per gli agenti. ATTENZIONE: invia il dominio al servizio esterno ora.ai.
+# Si attiva anche da riga di comando con --ax. È pensato per prodotti con API/MCP: per un sito di contenuti il punteggio assoluto
+# è poco significativo, contano i "top fix". Per default i risultati sono 🔲 informativi e non alterano ✅/⚠️/❌.
+# ax = false
+# ax_package = "ax@0.10.1"        # versione fissata (npx --yes <pacchetto>)
+# ax_min_score = 60               # se impostato, il punteggio diventa un controllo (✅/⚠️)
+# ax_force = false                # ignora la cache di Ora (budget 6 al giorno)
+# ax_top = 6                      # quanti "top fix" riportare
+
+[ignore]
+checks = []                       # ID da ignorare (accetta *), es. ["N*", "A10"]

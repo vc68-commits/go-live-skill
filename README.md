@@ -5,7 +5,7 @@ Scansiona il codebase (grep automatico per implementazioni)
 Esegue HTTP check sul dominio live (headers, meta, robots)
 Produce un report categorizzato con ✅ / ⚠️ / ❌ / 🔲 per ogni item
 Salva GO-LIVE-CHECKLIST.md nella root del progetto per tracciare i progressi
-9 categorie (dalla bollette.it experience):
+Versione 1.4.0: 18 categorie (A–R). Le prime 9, dalla bollette.it experience (elenco completo in SKILL.md):
 
 #	Categoria	Check automatici	Check manuali
 A	Infrastruttura & DNS	SSL/HTTPS, redirect	DNS, MX, DKIM/SPF

@@ -5,7 +5,7 @@ user-invokable: true
 argument-hint: "[url-o-dominio] [--config percorso/go-live.toml] [--save]"
 license: MIT
 metadata:
-  version: "2.0.0"
+  version: "2.2.0"
   category: launch
   requires: "python3 >= 3.11 (solo libreria standard)"
 ---
@@ -78,6 +78,12 @@ ciò che lo script non può sapere** (qualità dei contenuti, E-E-A-T, schema in
 Prompt tipo: `URL: …  Dati già raccolti: <json>. Restituisci SOLO i punti in più rispetto ai fatti già raccolti, formato ✅/⚠️/❌/🔲, max 300 parole. Non fare un audit standalone.`
 
 ### Step 4 — Report
+
+**Lingua:** lo script produce testi (titoli dei controlli, evidenze, intestazioni) **in italiano**. Scrivi il report finale
+nella **lingua dell'utente** (quella della conversazione o quella richiesta esplicitamente, es. "report in inglese"; in
+dubbio, l'ultimo messaggio) **traducendo** i testi dello script. Non tradurre: ID dei controlli (A01, S02…), comandi,
+URL, valori tecnici, nomi di record DNS/header, icone di stato (✅ ⚠️ ❌ 🔲) e i conteggi/score. Il file `.md` salvato
+da `collect.py` resta in italiano; quello che salvi con `--save` (Step 5) segue la lingua del report.
 
 1. **Intestazione** e **SCORE** dello script (copiali tali e quali).
 2. Le categorie A-S dello script, con i punti aggiuntivi dei subagent marcati `(seo-xxx)` e quelli dello scan codice `(codice)`.

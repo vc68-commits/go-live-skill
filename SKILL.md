@@ -6,7 +6,7 @@ argument-hint: "[url]"
 license: MIT
 metadata:
   author: bollette.it
-  version: "1.4.0"
+  version: "1.5.0"
   category: launch
 ---
 
@@ -371,6 +371,11 @@ Sei chiamato dal go-live audit: restituisci SOLO i check rilevanti per le sezion
 ---
 
 ### Step 4 — Analisi dei risultati e report
+
+**Lingua del report:** scrivi il report (titoli delle sezioni, descrizioni, impatto, correzioni proposte) nella **lingua
+dell'utente**: quella in cui ti ha scritto o che ha chiesto esplicitamente (es. "report in inglese"). In caso di dubbio,
+usa la lingua dell'ultimo messaggio. Lascia invariati ID dei controlli, comandi, URL, valori tecnici e icone di stato
+(✅ ⚠️ ❌ 🔲). Il modello di output qui sotto è scritto in italiano: traducilo, non copiarlo.
 
 Per ogni item, assegna uno stato:
 - **✅** — implementato e verificato

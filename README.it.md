@@ -6,14 +6,14 @@ Skill per [Claude Code](https://claude.com/claude-code) che verifica la prontezz
 
 | Skill | Versione | Come lavora | Dipendenze |
 |---|---|---|---|
-| [`go-live`](./SKILL.md) | 1.4.0 | Il modello lancia `curl`/`dig`/`grep` e compila la checklist | `dig`, `curl`, `python3` |
-| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.0.0 | Uno script Python raccoglie i fatti (solo lettura), il modello li interpreta | Python 3.11+; opzionali Playwright, Node.js |
+| [`go-live`](./SKILL.md) | 1.5.0 | Il modello lancia `curl`/`dig`/`grep` e compila la checklist | `dig`, `curl`, `python3` |
+| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.2.0 | Uno script Python raccoglie i fatti (solo lettura), il modello li interpreta | Python 3.11+; opzionali Playwright, Node.js |
 
 Lo stato di ogni controllo è ✅ / ⚠️ / ❌ / 🔲 (manuale), con priorità **P0** (blocca il lancio) → P1 → P2 → P3.
 
 La v2 non sostituisce la v1: ne riusa le definizioni delle categorie (A–R), le regole di priorità e le note operative. **Installa entrambe.**
 
-> Nota: i file delle skill (`SKILL.md`) e i report sono scritti in italiano.
+> Nota: i file delle skill (`SKILL.md`) sono scritti in italiano. Quando le usi tramite Claude, il report finale è scritto nella **tua lingua** (quella della conversazione o quella che chiedi, es. "report in inglese"). I file `.md`/`.json` scritti da `collect.py` lanciato direttamente da terminale restano in italiano.
 
 ---
 

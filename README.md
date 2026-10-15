@@ -6,14 +6,14 @@ Skills for [Claude Code](https://claude.com/claude-code) that check whether a we
 
 | Skill | Version | How it works | Dependencies |
 |---|---|---|---|
-| [`go-live`](./SKILL.md) | 1.4.0 | The model runs `curl`/`dig`/`grep` and fills in the checklist | `dig`, `curl`, `python3` |
-| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.0.0 | A Python script collects the facts (read-only), the model interprets them | Python 3.11+; optional: Playwright, Node.js |
+| [`go-live`](./SKILL.md) | 1.5.0 | The model runs `curl`/`dig`/`grep` and fills in the checklist | `dig`, `curl`, `python3` |
+| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.2.0 | A Python script collects the facts (read-only), the model interprets them | Python 3.11+; optional: Playwright, Node.js |
 
 Each check is reported as ✅ / ⚠️ / ❌ / 🔲 (manual), with priority **P0** (blocks launch) → P1 → P2 → P3.
 
 v2 does not replace v1: it reuses v1's category definitions (A–R), priority rules and operating notes. **Install both.**
 
-> Note: the skill files themselves (`SKILL.md`) and their reports are written in Italian.
+> Note: the skill files themselves (`SKILL.md`) are written in Italian. When run through Claude, the final report is written in **your language** (the language of the conversation, or the one you ask for, e.g. "report in English"). The `.md`/`.json` files that `collect.py` writes when run directly from the terminal stay in Italian.
 
 ---
 

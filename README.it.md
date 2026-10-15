@@ -7,7 +7,7 @@ Skill per [Claude Code](https://claude.com/claude-code) che verifica la prontezz
 | Skill | Versione | Come lavora | Dipendenze |
 |---|---|---|---|
 | [`go-live`](./SKILL.md) | 1.5.0 | Il modello lancia `curl`/`dig`/`grep` e compila la checklist | `dig`, `curl`, `python3` |
-| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.2.0 | Uno script Python raccoglie i fatti (solo lettura), il modello li interpreta | Python 3.11+; opzionali Playwright, Node.js |
+| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.3.0 | Uno script Python raccoglie i fatti (solo lettura), il modello li interpreta | Python 3.11+; opzionali Playwright, Node.js |
 
 Lo stato di ogni controllo è ✅ / ⚠️ / ❌ / 🔲 (manuale), con priorità **P0** (blocca il lancio) → P1 → P2 → P3.
 

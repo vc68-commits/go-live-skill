@@ -7,7 +7,7 @@ Skills for [Claude Code](https://claude.com/claude-code) that check whether a we
 | Skill | Version | How it works | Dependencies |
 |---|---|---|---|
 | [`go-live`](./SKILL.md) | 1.5.0 | The model runs `curl`/`dig`/`grep` and fills in the checklist | `dig`, `curl`, `python3` |
-| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.2.0 | A Python script collects the facts (read-only), the model interprets them | Python 3.11+; optional: Playwright, Node.js |
+| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.3.0 | A Python script collects the facts (read-only), the model interprets them | Python 3.11+; optional: Playwright, Node.js |
 
 Each check is reported as ✅ / ⚠️ / ❌ / 🔲 (manual), with priority **P0** (blocks launch) → P1 → P2 → P3.
 

@@ -5,7 +5,7 @@ user-invokable: true
 argument-hint: "[url-o-dominio] [--config percorso/go-live.toml] [--save]"
 license: MIT
 metadata:
-  version: "2.2.0"
+  version: "2.3.0"
   category: launch
   requires: "python3 >= 3.11 (solo libreria standard)"
 ---

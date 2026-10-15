@@ -274,7 +274,14 @@ class Collector:
         elif www["status"] in (301, 308) and d in www["headers"].get("location", ""):
             a.add("A03", "Redirect www ↔ apex", "ok", f"{www['status']} → {www['headers'].get('location')}")
         elif www["status"] == 200:
-            a.add("A03", "Redirect www ↔ apex", "warn", "www e apex rispondono entrambi 200: contenuto duplicato")
+            apex = self.http.fetch(f"https://{d}/", follow=False)
+            aloc = apex["headers"].get("location", "") if apex["ok"] else ""
+            if apex["ok"] and apex["status"] in (301, 308) and f"www.{d}" in aloc:
+                a.add("A03", "Redirect www ↔ apex", "ok", f"canonico www; apex {apex['status']} → {aloc}")
+            elif apex["ok"] and apex["status"] == 200:
+                a.add("A03", "Redirect www ↔ apex", "warn", "www e apex rispondono entrambi 200: contenuto duplicato")
+            else:
+                a.add("A03", "Redirect www ↔ apex", "warn", f"www 200; apex: status {apex.get('status')} {aloc or apex.get('error') or ''}".strip())
         else:
             a.add("A03", "Redirect www ↔ apex", "warn", f"www: status {www['status']}")
         rA, vA = doh_values(d, "A")
@@ -830,7 +837,7 @@ class Collector:
                 for tag, at in f["inputs"]:
                     if at.get("type") in ("hidden", "submit", "button", "image", "reset"):
                         continue
-                    if not (at.get("id") in p.labels_for or at.get("aria-label") or at.get("aria-labelledby") or at.get("title")):
+                    if not (at.get("id") in p.labels_for or at.get("_in_label") or at.get("aria-label") or at.get("aria-labelledby") or at.get("title")):
                         miss += 1
                 if miss:
                     forms_nolabel.append(f"{path} ({miss} campi)")
@@ -873,8 +880,12 @@ class Collector:
         a.add("C09", "Schema.org specifico per le pagine (Article, FAQ, Breadcrumb, …)", "ok" if page_specific else "warn",
               ", ".join(f"{t} su {len(set(tl[t]))} pag." for t in page_specific) or "nessuno nelle pagine campionate")
         a.add("C10", "GA4 configurato", "ok" if ga4 else "warn", ga4 or "ID G-… non trovato nel HTML (potrebbe essere in GTM)")
-        a.add("C11", "Google Search Console: meta tag di verifica", "warn" if gsc else "fail",
-              (f"meta presente ({gsc[:8]}…): la verifica completata non è controllabile da fuori" if gsc else "assente (la verifica può essere via DNS/file: controllare in GSC)"))
+        _, txt_apex = doh_values(self.domain, "TXT")
+        gsc_dns = [t for t in txt_apex if t.strip('"').startswith("google-site-verification=")]
+        a.add("C11", "Google Search Console: verifica del dominio (meta tag o record DNS)", "ok" if (gsc or gsc_dns) else "fail",
+              ("; ".join(x for x in ((f"meta presente ({gsc[:8]}…)" if gsc else ""), (f"record DNS TXT google-site-verification presente ({gsc_dns[0].strip(chr(34))[26:34]}…)" if gsc_dns else "")) if x)
+               + ": la verifica completata non è controllabile da fuori (vedi C12)") if (gsc or gsc_dns)
+              else "assente come meta tag e come record DNS (può essere via file HTML o Google Analytics/Tag Manager: controllare in GSC)")
         a.add("C12", "Search Console: verifica completata, sitemap inviata, copertura", "manual", "serve accesso a GSC")
         a.add("C13", "GA4 collegato a Search Console", "manual", "serve accesso a GA4")
         # P
@@ -931,7 +942,9 @@ class Collector:
         frames = " ".join(i.get("src", "") for pg in okp for i in pg["p"].iframes)
         csp = self.a.facts.get("csp", "")
         captcha = re.findall(r"recaptcha|hcaptcha|turnstile|friendlycaptcha", scripts_all + frames + csp, re.I)
-        honey = [(u, i[1].get("name")) for u, f in forms for i in f["inputs"] if i[1].get("type") == "hidden" and re.search(r"honey|hp|bot|website|url|trap", i[1].get("name", ""), re.I)]
+        honey = [(u, i[1].get("name")) for u, f in forms for i in f["inputs"]
+                 if (i[1].get("type") == "hidden" and re.search(r"honey|hp|bot|website|url|trap", i[1].get("name", ""), re.I))
+                 or (i[1].get("type", "text") == "text" and i[1].get("tabindex") == "-1")]  # campo di testo escluso dalla tastiera = trappola per bot
         a.add("L01", "Form rilevati nelle pagine campione", "na" if not forms else "ok", f"{len(forms)} form" if forms else "nessun form nelle pagine campionate (potrebbero essere caricati lato client)")
         a.add("L02", "Honeypot o captcha", "na" if not forms and not captcha else ("ok" if captcha or honey else "warn"),
               f"captcha: {sorted(set(c.lower() for c in captcha)) or '—'}; honeypot: {len(honey)}")
@@ -1234,8 +1247,11 @@ class Collector:
                 continue
             nodes = data if isinstance(data, list) else data.get("@graph", [data]) if isinstance(data, dict) else []
             for n in nodes:
-                if isinstance(n, dict) and str(n.get("@type", "")) in ("Organization", "Corporation", "LocalBusiness", "NewsMediaOrganization"):
-                    org = n
+                if isinstance(n, dict):
+                    ts = n.get("@type", "")
+                    ts = ts if isinstance(ts, list) else [ts]
+                    if any(str(t) in ("Organization", "Corporation", "LocalBusiness", "NewsMediaOrganization") for t in ts):
+                        org = n
         for cid, key, title in (("R02", "contactPoint", "Schema Organization: contactPoint"), ("R03", "sameAs", "Schema Organization: sameAs (profili social)"),
                                 ("R04", "address", "Schema Organization: address"), ("R05", "logo", "Schema Organization: logo")):
             a.add(cid, title, "na" if org is None else ("ok" if org.get(key) else "warn"),
@@ -1522,6 +1538,7 @@ class Collector:
         self._safe(self.run_pages)
         self._safe(self.run_M)
         self._safe(self.run_assets)
+        self._safe(self.refine_ga4)
         self._safe(self.run_legal_company)
         self._safe(self.collect_third_parties)
         self._safe(self.run_S)
@@ -1533,6 +1550,18 @@ class Collector:
             self._safe(self.run_ax)
         self.finish()
         return self.a
+
+    def refine_ga4(self):
+        """C10: l'ID GA4 può stare nel JS first-party (letto in run_assets), non solo nell'HTML."""
+        c = next((x for x in self.a.checks if x["id"] == "C10"), None)
+        if not c or c["status"] == "ok":
+            return
+        for src, txt in self.js_texts.items():
+            m = re.search(r"\bG-[A-Z0-9]{6,12}\b", txt)
+            if m:
+                c["status"] = "ok"
+                c["evidence"] = f"{m.group(0)} (nel JS first-party {src.rsplit('/', 1)[-1].split('?')[0]})"
+                return
 
     def finish(self):
         ign = self.cfg["ignore"]["checks"]

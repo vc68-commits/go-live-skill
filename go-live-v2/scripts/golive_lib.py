@@ -217,6 +217,7 @@ class PageParser(HTMLParser):
         self._inline_budget = 400_000
         self.inline_scripts = []
         self.labels_for = set()
+        self._label_depth = 0
 
     def handle_starttag(self, tag, attrs):
         a = {k: (v if v is not None else "") for k, v in attrs}
@@ -245,13 +246,19 @@ class PageParser(HTMLParser):
         elif tag == "form":
             self._cur_form = {"attrs": a, "inputs": []}
         elif tag in ("input", "select", "textarea") and self._cur_form is not None:
+            if self._label_depth > 0:
+                a = dict(a, _in_label="1")  # etichetta implicita: <label><input> ... </label>
             self._cur_form["inputs"].append((tag, a))
-        elif tag == "label" and a.get("for"):
-            self.labels_for.add(a["for"])
+        elif tag == "label":
+            self._label_depth += 1
+            if a.get("for"):
+                self.labels_for.add(a["for"])
         if a.get("role") in ("main", "navigation", "banner", "contentinfo", "complementary", "search"):
             self.landmarks.add("role:" + a["role"])
 
     def handle_endtag(self, tag):
+        if tag == "label" and self._label_depth > 0:
+            self._label_depth -= 1
         if tag == "title":
             self._in_title = False
         elif tag == "script" and self._cur_script is not None:

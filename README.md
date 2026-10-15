@@ -1,5 +1,7 @@
 # go-live-skill
 
+**English** · [Italiano](./README.it.md)
+
 Skills for [Claude Code](https://claude.com/claude-code) that check whether a website or web app is ready to launch and produce a prioritized checklist. This repo contains two versions:
 
 | Skill | Version | How it works | Dependencies |

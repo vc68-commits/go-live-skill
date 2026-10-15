@@ -1,31 +1,33 @@
 # go-live-skill
 
-Skill per [Claude Code](https://claude.com/claude-code) che verifica la prontezza al lancio di un sito o di una web app e produce una checklist con priorità. Questo repo contiene due versioni:
+Skills for [Claude Code](https://claude.com/claude-code) that check whether a website or web app is ready to launch and produce a prioritized checklist. This repo contains two versions:
 
-| Skill | Versione | Come lavora | Dipendenze |
+| Skill | Version | How it works | Dependencies |
 |---|---|---|---|
-| [`go-live`](./SKILL.md) | 1.4.0 | Il modello lancia `curl`/`dig`/`grep` e compila la checklist | `dig`, `curl`, `python3` |
-| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.0.0 | Uno script Python raccoglie i fatti (solo lettura), il modello li interpreta | Python 3.11+; opzionali Playwright, Node.js |
+| [`go-live`](./SKILL.md) | 1.4.0 | The model runs `curl`/`dig`/`grep` and fills in the checklist | `dig`, `curl`, `python3` |
+| [`go-live-v2`](./go-live-v2/SKILL.md) | 2.0.0 | A Python script collects the facts (read-only), the model interprets them | Python 3.11+; optional: Playwright, Node.js |
 
-Lo stato di ogni controllo è ✅ / ⚠️ / ❌ / 🔲 (manuale), con priorità **P0** (blocca il lancio) → P1 → P2 → P3.
+Each check is reported as ✅ / ⚠️ / ❌ / 🔲 (manual), with priority **P0** (blocks launch) → P1 → P2 → P3.
 
-La v2 non sostituisce la v1: ne riusa le definizioni delle categorie (A–R), le regole di priorità e le note operative. **Installa entrambe.**
+v2 does not replace v1: it reuses v1's category definitions (A–R), priority rules and operating notes. **Install both.**
+
+> Note: the skill files themselves (`SKILL.md`) and their reports are written in Italian.
 
 ---
 
-## Installazione
+## Installation
 
-### Requisiti
+### Requirements
 
-- Claude Code installato e funzionante
+- Claude Code, installed and working
 - `git`
-- Per la v1: `curl`, `dig`, `python3`
-- Per la v2: `python3` ≥ 3.11 (solo libreria standard, serve `tomllib`)
-- Per il modulo browser della v2 (opzionale): Node.js (versione LTS recente) con `npm`, più Playwright e Chromium (vedi sotto)
+- For v1: `curl`, `dig`, `python3`
+- For v2: `python3` ≥ 3.11 (standard library only; `tomllib` is required)
+- For the optional v2 browser module: Node.js (recent LTS) with `npm`, plus Playwright and Chromium (see below)
 
 ### 1. go-live (v1)
 
-Le skill di Claude Code stanno in `~/.claude/skills/`. Clona il repo in una cartella di lavoro e collega le due skill:
+Claude Code skills live in `~/.claude/skills/`. Clone the repo into a working folder and link the skills:
 
 ```bash
 git clone git@github.com:vc68-commits/go-live-skill.git ~/projects/go-live-skill
@@ -33,7 +35,7 @@ mkdir -p ~/.claude/skills
 ln -s ~/projects/go-live-skill ~/.claude/skills/go-live
 ```
 
-La v1 è la radice del repo (`SKILL.md`). Il link simbolico espone anche la cartella `go-live-v2/` dentro `go-live/`: è innocuo, ma se preferisci evitarlo copia solo i file della v1:
+v1 is the root of the repo (`SKILL.md`). The symlink also exposes the `go-live-v2/` folder inside `go-live/`. This is harmless, but if you prefer to avoid it, copy only the v1 files:
 
 ```bash
 mkdir -p ~/.claude/skills/go-live
@@ -46,121 +48,121 @@ cp ~/projects/go-live-skill/{SKILL.md,README.md,LICENSE.txt} ~/.claude/skills/go
 ln -s ~/projects/go-live-skill/go-live-v2 ~/.claude/skills/go-live-v2
 ```
 
-oppure, senza link simbolico:
+or, without a symlink:
 
 ```bash
 cp -R ~/projects/go-live-skill/go-live-v2 ~/.claude/skills/go-live-v2
 ```
 
-Dopo questo passo la v2 è già utilizzabile: il raccoglitore (`scripts/collect.py`) usa solo la libreria standard di Python.
+After this step v2 is already usable: the collector (`scripts/collect.py`) only needs the Python standard library.
 
-### 3. Modulo browser della v2 (opzionale)
+### 3. v2 browser module (optional)
 
-Serve per i controlli che richiedono un browser reale: banner e cookie prima/dopo il consenso, errori CSP/JS, LCP/CLS/TBT, accessibilità con axe-core, tastiera, layout mobile e Lighthouse. Si attiva con `--browser` o con `[browser] enabled = true` nel file di configurazione.
+This module covers the checks that need a real browser: cookie banner and cookies before/after consent, CSP/JS errors, LCP/CLS/TBT, accessibility with axe-core, keyboard navigation, mobile layout and Lighthouse. Enable it with `--browser` or with `[browser] enabled = true` in the config file.
 
-Lo script cerca le dipendenze **dentro la cartella della skill**, quindi gli ambienti vanno creati lì:
+The script looks for its dependencies **inside the skill folder**, so create the environments there:
 
 ```bash
 cd ~/.claude/skills/go-live-v2
 
-# Python: Playwright (versione fissata) e Chromium
+# Python: Playwright (pinned version) and Chromium
 python3 -m venv .venv
 .venv/bin/pip install "playwright==1.63.0"
 .venv/bin/playwright install chromium
 
-# Node: axe-core e Lighthouse (da package.json)
+# Node: axe-core and Lighthouse (from package.json)
 npm install
 ```
 
-Se usi un link simbolico, queste cartelle (`.venv/`, `node_modules/`) finiscono dentro il repo clonato. **Non committarle**: nel repo non c'è un `.gitignore` per `go-live-v2/`.
+If you use a symlink, `.venv/` and `node_modules/` end up inside the cloned repo. **Do not commit them**: `go-live-v2/` has no `.gitignore`.
 
-Senza il modulo browser, i controlli che lo richiedono compaiono come 🔲 (non eseguiti), mai come superati.
+Without the browser module, the checks that need it appear as 🔲 (not run), never as passed.
 
-### 4. Verifica
+### 4. Verify
 
 ```bash
 python3 ~/.claude/skills/go-live-v2/scripts/collect.py --help
 ```
 
-Poi apri una sessione di Claude Code e digita `/go-live` o `/go-live-v2`: le due skill devono comparire tra quelle disponibili.
+Then open a Claude Code session and type `/go-live` or `/go-live-v2`: both skills should be listed as available.
 
 ---
 
-## Uso
+## Usage
 
 ### go-live (v1)
 
 ```
 /go-live
-/go-live https://esempio.com
+/go-live https://example.com
 ```
 
-Legge il contesto del progetto (`CLAUDE.md`, `package.json`, file di configurazione), rileva il framework, scansiona il codice, fa i controlli HTTP sul dominio live e salva `GO-LIVE-CHECKLIST.md` nella root del progetto.
+Reads the project context (`CLAUDE.md`, `package.json`, config files), detects the framework, scans the codebase, runs HTTP checks against the live domain and saves `GO-LIVE-CHECKLIST.md` in the project root.
 
 ### go-live-v2
 
 ```
 /go-live-v2
-/go-live-v2 https://esempio.com
+/go-live-v2 https://example.com
 ```
 
-Oppure direttamente da terminale, senza passare dal modello:
+Or straight from the terminal, without going through the model:
 
 ```bash
-python3 ~/.claude/skills/go-live-v2/scripts/collect.py --config go-live.toml --md            # circa 1 minuto
-python3 ~/.claude/skills/go-live-v2/scripts/collect.py --config go-live.toml --browser --md  # circa 2,5 minuti
-python3 ~/.claude/skills/go-live-v2/scripts/collect.py --url https://esempio.com --md        # senza file di configurazione
+python3 ~/.claude/skills/go-live-v2/scripts/collect.py --config go-live.toml --md            # about 1 minute
+python3 ~/.claude/skills/go-live-v2/scripts/collect.py --config go-live.toml --browser --md  # about 2.5 minutes
+python3 ~/.claude/skills/go-live-v2/scripts/collect.py --url https://example.com --md        # no config file
 ```
 
-Opzioni principali: `--config`, `--url`, `--browser`, `--md`, `--no-history`, `--notify`, `--isagentic`, `--ax`. Le ultime tre inviano il dominio a servizi esterni (vedi i commenti nel template).
+Main options: `--config`, `--url`, `--browser`, `--md`, `--no-history`, `--notify`, `--isagentic`, `--ax`. The last three send the domain to external services (see the comments in the template).
 
-Ogni esecuzione scrive `~/go-live-test/<dominio>/<data>.json` e `.md` e confronta il risultato con l'esecuzione precedente (peggiorati / migliorati / nuovi). Il raccoglitore fa solo richieste in lettura, a 1 richiesta al secondo, e non modifica mai il sito, il server o il DNS.
+Each run writes `~/go-live-test/<domain>/<date>.json` and `.md`, and compares the result with the previous run (worse / better / new). The collector only makes read requests, at 1 request per second, and never modifies the site, the server or the DNS.
 
-### Configurazione per sito
+### Per-site configuration
 
-Copia il template accanto al progetto e compilalo:
+Copy the template next to your project and fill it in:
 
 ```bash
 cp ~/.claude/skills/go-live-v2/templates/go-live.toml ./go-live.toml
 ```
 
-I campi essenziali sono `domain` e `url`. Più la configurazione è precisa (`[email].providers`, `auth_via_email`, `[legal].expected_subprocessors`, `[ignore].checks`), più i controlli sono affidabili. Il token per gli avvisi Telegram non va mai nel file `.toml`: sta in `~/.config/go-live/telegram.env`.
+The essential fields are `domain` and `url`. The more precise the configuration (`[email].providers`, `auth_via_email`, `[legal].expected_subprocessors`, `[ignore].checks`), the more reliable the checks. The token for Telegram alerts never goes in the `.toml` file: it lives in `~/.config/go-live/telegram.env`.
 
 ---
 
-## Categorie
+## Categories
 
-La v1 definisce 18 categorie (A–R); la v2 ne aggiunge due:
+v1 defines 18 categories (A–R); v2 adds two:
 
-- **S** — coerenza tra fonti (sub-responsabili nella privacy vs fornitori rilevati, provider email dichiarati vs DNS, P.IVA, cookie vs cookie policy)
-- **Z** — errori interni dello script (una sezione che va in errore non risulta mai come superata)
+- **S** — cross-source consistency (sub-processors listed in the privacy policy vs. detected vendors, declared email providers vs. DNS, VAT number, cookies vs. cookie policy)
+- **Z** — internal script errors (a section that crashes is never reported as passed)
 
-Le prime nove, dall'esperienza su bollette.it:
+The first nine, from the bollette.it experience:
 
-| # | Categoria | Check automatici | Check manuali |
+| # | Category | Automatic checks | Manual checks |
 |---|---|---|---|
-| A | Infrastruttura & DNS | SSL/HTTPS, redirect | DNS, MX, DKIM/SPF |
-| B | Sicurezza | HSTS, CSP, X-Frame, nosniff | Rate limiting, pentest |
-| C | SEO Foundation | robots.txt, sitemap, canonical, schema, GA4, GSC meta | GSC verificata, link GA4↔GSC |
-| D | GEO / AI | llms.txt, markup AI-friendly | Test dei crawler AI |
-| E | Legal & GDPR | pagine Privacy/Termini/Cookie, banner, consent mode | DPO, DPIA, retention policy |
-| F | Dati azienda | P.IVA, indirizzo e link legali nel footer | — |
-| G | Performance | dimensione bundle, immagini ottimizzate | Lighthouse, CWV |
-| H | Content & UX | 404, tag OG, favicon, pagine di errore | Keyword delle landing, gap sui competitor |
-| I | Monitoring | Sentry/error tracking, uptime | Alert, revisione dei log |
+| A | Infrastructure & DNS | SSL/HTTPS, redirects | DNS, MX, DKIM/SPF |
+| B | Security | HSTS, CSP, X-Frame, nosniff | Rate limiting, pentest |
+| C | SEO Foundation | robots.txt, sitemap, canonical, schema, GA4, GSC meta | GSC verified, GA4↔GSC link |
+| D | GEO / AI | llms.txt, AI-friendly markup | AI crawler test |
+| E | Legal & GDPR | Privacy/Terms/Cookie pages, banner, consent mode | DPO, DPIA, retention policy |
+| F | Company info | VAT number, address and legal links in the footer | — |
+| G | Performance | Bundle size, optimized images | Lighthouse, CWV |
+| H | Content & UX | 404, OG tags, favicon, error pages | Landing keywords, competitor gap |
+| I | Monitoring | Sentry/error tracking, uptime | Alerts, log review |
 
-L'elenco completo, con i singoli controlli, sta in [`SKILL.md`](./SKILL.md).
+The full list, with each individual check, is in [`SKILL.md`](./SKILL.md).
 
 ---
 
-## Aggiornamento
+## Updating
 
 ```bash
 cd ~/projects/go-live-skill && git pull
 ```
 
-Se hai copiato i file invece di usare i link simbolici, ripeti la copia dopo il `pull`. Gli ambienti `.venv/` e `node_modules/` della v2 non vengono toccati; riesegui `npm install` solo se cambia `package.json`.
+If you copied the files instead of using symlinks, repeat the copy after the `pull`. The v2 `.venv/` and `node_modules/` are left untouched; re-run `npm install` only if `package.json` changes.
 
-## Licenza
+## License
 
-Vedi [`LICENSE.txt`](./LICENSE.txt).
+See [`LICENSE.txt`](./LICENSE.txt).
